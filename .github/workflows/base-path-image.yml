@@ -1,0 +1,101 @@
+name: Base path image
+
+# Builds the latest upstream release with the base-path patch applied and publishes it to ghcr.io.
+# The patch is cherry-picked on top of the release tag here: this job never rewrites branches.
+# If the patch no longer applies, the job fails and the base-path branch has to be rebased by hand.
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  push:
+    branches: ["base-path"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/piero-93/lubelogger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: base-path
+          fetch-depth: 0
+
+      - name: Find upstream release
+        id: release
+        run: |
+          git remote add upstream https://github.com/hargata/lubelog.git
+          git fetch --quiet --tags upstream
+          latest=$(git tag -l 'v[0-9]*' --sort=-v:refname | head -1)
+          base=$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD)
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "patch=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "upstream $latest, patch based on $base"
+
+      - name: Skip if already published
+        id: published
+        if: github.event_name == 'schedule'
+        run: |
+          if docker manifest inspect "$IMAGE:${{ steps.release.outputs.latest }}" >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "$IMAGE:${{ steps.release.outputs.latest }} already published"
+          fi
+
+      - name: Apply the patch on the release
+        if: steps.published.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --quiet --detach "${{ steps.release.outputs.latest }}"
+          git cherry-pick "${{ steps.release.outputs.base }}..${{ steps.release.outputs.patch }}"
+
+      - name: Check navigations
+        if: steps.published.outputs.skip != 'true'
+        run: .github/base-path/check.sh
+
+      - name: Set up Docker Buildx
+        if: steps.published.outputs.skip != 'true'
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build for the smoke test
+        if: steps.published.outputs.skip != 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: lubelogger:smoke
+
+      - name: Smoke test under /lubelogger
+        if: steps.published.outputs.skip != 'true'
+        run: .github/base-path/smoke.sh lubelogger:smoke
+
+      - name: Login to GitHub Container Registry
+        if: steps.published.outputs.skip != 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        if: steps.published.outputs.skip != 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ steps.release.outputs.latest }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=LubeLogger ${{ steps.release.outputs.latest }} with LUBELOGGER_BASE_PATH support
+            org.opencontainers.image.licenses=MIT
