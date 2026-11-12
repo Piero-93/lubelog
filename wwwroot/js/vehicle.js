@@ -236,7 +236,7 @@ function deleteVehicle(vehicleId) {
         if (result.isConfirmed) {
             $.post('/Vehicle/DeleteVehicle', { vehicleId: vehicleId }, function (data) {
                 if (data.success) {
-                    window.location.href = '/Home';
+                    window.location.href = withBasePath('/Home');
                 } else {
                     errorToast(data.message);
                 }

@@ -46,7 +46,7 @@
     var uploadedFile = "";
     function downloadCsvSample(){
         let mode = "@Model";
-        window.open(`/Vehicle/GenerateCsvSample?mode=${mode}&vehicleId=${GetVehicleId().vehicleId}`);
+        window.open(withBasePath(`/Vehicle/GenerateCsvSample?mode=${mode}&vehicleId=${GetVehicleId().vehicleId}`));
     }
     function importFromCsv() {
         var vehicleId = GetVehicleId().vehicleId;

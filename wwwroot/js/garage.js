@@ -181,7 +181,7 @@ function performLogOut() {
     $.post('/Login/LogOut', function (data) {
         if (data) {
             resetEventHub();
-            window.location.href = data;
+            window.location.href = withBasePath(data);
         }
     })
 }
@@ -892,5 +892,5 @@ $(function () {
     });
 })
 function goToAdminPanel() {
-    window.location.href = '/Admin';
+    window.location.href = withBasePath('/Admin');
 }

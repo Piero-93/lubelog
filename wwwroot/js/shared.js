@@ -3,10 +3,28 @@
         return $(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
     };
 });
+//base path when served under a sub-path (LUBELOGGER_BASE_PATH), derived from where this script was loaded.
+const basePath = (function () {
+    let scriptPath = document.currentScript ? new URL(document.currentScript.src).pathname : "";
+    let suffix = "/js/shared.js";
+    return scriptPath.endsWith(suffix) ? scriptPath.slice(0, -suffix.length) : "";
+})();
+function withBasePath(url) {
+    if (!basePath || typeof url !== "string" || !url.startsWith("/") || url.startsWith("//")) {
+        return url;
+    }
+    if (url == basePath || url.startsWith(`${basePath}/`) || url.startsWith(`${basePath}?`)) {
+        return url;
+    }
+    return `${basePath}${url}`;
+}
+$.ajaxPrefilter(function (options) {
+    options.url = withBasePath(options.url);
+});
 const mobileScreen = window.matchMedia("(max-width: 575px)");
 var eventHubConn = undefined;
 function returnToGarage() {
-    window.location.href = '/Home';
+    window.location.href = withBasePath('/Home');
 }
 function confirmDelete(message, callBack) {
     Swal.fire({
@@ -81,9 +99,9 @@ function warnToast(message) {
 }
 function viewVehicle(vehicleId, tab) {
     if (tab != undefined) {
-        window.location.href = `/Vehicle/Index?vehicleId=${vehicleId}&tab=${tab}`;
+        window.location.href = withBasePath(`/Vehicle/Index?vehicleId=${vehicleId}&tab=${tab}`);
     } else {
-        window.location.href = `/Vehicle/Index?vehicleId=${vehicleId}`;
+        window.location.href = withBasePath(`/Vehicle/Index?vehicleId=${vehicleId}`);
     }
 }
 function saveVehicle(isEdit) {
@@ -912,7 +930,7 @@ function exportVehicleData(mode) {
                                 return;
                             }
                             else if (data) {
-                                window.location.href = data;
+                                window.location.href = withBasePath(data);
                             }
                         });
                     }
@@ -926,7 +944,7 @@ function exportVehicleData(mode) {
                 return;
             }
             else if (data) {
-                window.location.href = data;
+                window.location.href = withBasePath(data);
             }
         });
     }
@@ -2150,7 +2168,7 @@ async function setupEventHub(groupName, callBack, callBackParam) {
         return;
     }
     //initialize signalr
-    let eventHubUrl = '/api/ws';
+    let eventHubUrl = withBasePath('/api/ws');
     await resetEventHub();
     try {
         eventHubConn = new signalR.HubConnectionBuilder().withUrl(eventHubUrl).build();

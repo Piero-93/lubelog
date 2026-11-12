@@ -147,6 +147,7 @@ builder.Services.Configure<FormOptions>(options =>
 var app = builder.Build();
 
 //configure the HTTP request pipeline.
+app.UseBasePath(builder.Configuration["LUBELOGGER_BASE_PATH"]);
 app.UseExceptionHandler("/Error");
 app.UseStatusCodePagesWithReExecute("/Error/{0}");
 

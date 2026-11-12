@@ -9,9 +9,9 @@
             //check for redirectURL
             var redirectURL = getRedirectURL().url;
             if (redirectURL.trim() != "") {
-                window.location.href = redirectURL;
+                window.location.href = withBasePath(redirectURL);
             } else {
-                window.location.href = '/Home';
+                window.location.href = withBasePath('/Home');
             }
         } else {
             errorToast(data.message);
@@ -32,7 +32,7 @@ function performRegistration() {
     $.post('/Login/Register', { userName: userName, password: userPassword, token: token, emailAddress: userEmail }, function (data) {
         if (data.success) {
             successToast(data.message);
-            setTimeout(function () { window.location.href = '/Login/Index' }, 500);
+            setTimeout(function () { window.location.href = withBasePath('/Login/Index') }, 500);
         } else {
             errorToast(data.message);
         }
@@ -43,7 +43,7 @@ function requestPasswordReset() {
     $.post('/Login/RequestResetPassword', { userName: userName }, function (data) {
         if (data.success) {
             successToast(data.message);
-            setTimeout(function () { window.location.href = '/Login/Index' }, 500);
+            setTimeout(function () { window.location.href = withBasePath('/Login/Index') }, 500);
         } else {
             errorToast(data.message);
         }
@@ -56,7 +56,7 @@ function performPasswordReset() {
     $.post('/Login/PerformPasswordReset', { password: userPassword, token: token, emailAddress: userEmail }, function (data) {
         if (data.success) {
             successToast(data.message);
-            setTimeout(function () { window.location.href = '/Login/Index' }, 500);
+            setTimeout(function () { window.location.href = withBasePath('/Login/Index') }, 500);
         } else {
             errorToast(data.message);
         }
@@ -71,7 +71,7 @@ function remoteLogin() {
     }
     $.get(`/Login/GetRemoteLoginLink?redirectURLBase64=${redirectUrl}`, { redirectURLBase64: redirectUrl }, function (data) {
         if (data) {
-            window.location.href = data;
+            window.location.href = withBasePath(data);
         }
     })
 }

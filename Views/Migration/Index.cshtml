@@ -50,7 +50,7 @@
         $.get('/Migration/Export', function (data) {
             sloader.hide();
             if (data.success) {
-                window.location.href = data.message;
+                window.location.href = withBasePath(data.message);
             } else {
                 errorToast(genericErrorMessage());
             }
@@ -73,7 +73,7 @@
                    sloader.hide();
                    if (data.success) {
                        successToast(data.message);
-                       setTimeout(function () { window.location.href = '/Home/Index' }, 500);
+                       setTimeout(function () { window.location.href = withBasePath('/Home/Index') }, 500);
                    } else {
                        errorToast(genericErrorMessage());
                    }

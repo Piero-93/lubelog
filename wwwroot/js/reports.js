@@ -342,7 +342,7 @@ function exportAttachments() {
                 var vehicleId = GetVehicleId().vehicleId;
                 $.post('/Vehicle/GetVehicleAttachments', { vehicleId: vehicleId, exportTabs: result.value.selectedTabs }, function (data) {
                     if (data.success) {
-                        window.location.href = data.message;
+                        window.location.href = withBasePath(data.message);
                     } else {
                         errorToast(data.message);
                     }

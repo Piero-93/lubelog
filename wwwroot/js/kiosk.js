@@ -173,7 +173,7 @@ function setUpKioskTimer() {
 }
 async function setupEventHubForKiosk(accessToken) {
     //initialize signalr
-    let eventHubUrl = '/api/ws';
+    let eventHubUrl = withBasePath('/api/ws');
     if (accessToken != undefined && accessToken != '') {
         eventHubUrl = `${eventHubUrl}?apiKey=${accessToken}`;
     }
